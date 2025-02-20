@@ -1,9 +1,9 @@
 ARG NODE_VERSION=20
 
-# 1. Create an image to build n8n
+# 1. Tạo hình ảnh để build n8n
 FROM --platform=linux/amd64 n8nio/base:${NODE_VERSION} AS builder
 
-# Build the application from source
+# Build ứng dụng từ nguồn
 WORKDIR /src
 COPY . /src
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
@@ -11,18 +11,18 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     DOCKER_BUILD=true pnpm install --frozen-lockfile
 RUN pnpm build
 
-# Delete all dev dependencies
+# Xóa các thư viện phát triển
 RUN jq 'del(.pnpm.patchedDependencies)' package.json > package.json.tmp && mv package.json.tmp package.json
 RUN node .github/scripts/trim-fe-packageJson.js
 
-# Delete any source code, source-mapping, or typings
+# Xóa mã nguồn, source-mapping, hoặc typings
 RUN find . -type f -name "*.ts" -o -name "*.js.map" -o -name "*.vue" -o -name "tsconfig.json" -o -name "*.tsbuildinfo" | xargs rm -rf
 
-# Deploy the `n8n` package into /compiled
+# Triển khai package `n8n` vào /compiled
 RUN mkdir /compiled
 RUN NODE_ENV=production DOCKER_BUILD=true pnpm --filter=n8n --prod --no-optional --legacy deploy /compiled
 
-# 2. Start with a new clean image with just the code that is needed to run n8n
+# 2. Bắt đầu với một hình ảnh sạch mới chỉ cần code để chạy n8n
 FROM n8nio/base:${NODE_VERSION}
 ENV NODE_ENV=production
 
@@ -37,6 +37,9 @@ RUN apt-get update && apt-get install -y \
 # Cài đặt Selenium
 RUN pip3 install --user selenium
 
+# Thiết lập biến môi trường cho Selenium
+ENV PATH $PATH:/usr/lib/chromium-browser
+
 ARG N8N_RELEASE_TYPE=dev
 ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
 
@@ -44,11 +47,11 @@ WORKDIR /home/node
 COPY --from=builder /compiled /usr/local/lib/node_modules/n8n
 COPY docker/images/n8n/docker-entrypoint.sh /
 
-# Setup the Task Runner Launcher
+# Thiết lập Task Runner Launcher
 ARG TARGETPLATFORM
 ARG LAUNCHER_VERSION=1.1.0
 COPY docker/images/n8n/n8n-task-runners.json /etc/n8n-task-runners.json
-# Download, verify, then extract the launcher binary
+# Tải xuống, xác thực và giải nén file launcher binary
 RUN \
     if [[ "$TARGETPLATFORM" = "linux/amd64" ]]; then export ARCH_NAME="amd64"; \
     elif [[ "$TARGETPLATFORM" = "linux/arm64" ]]; then export ARCH_NAME="arm64"; fi; \
