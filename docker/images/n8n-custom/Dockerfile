@@ -26,14 +26,16 @@ RUN NODE_ENV=production DOCKER_BUILD=true pnpm --filter=n8n --prod --no-optional
 FROM n8nio/base:${NODE_VERSION}
 ENV NODE_ENV=production
 
-# Nếu image cơ sở đã có Python3 và pip thì không cần cài đặt thêm (bỏ comment nếu cần)
-# USER root
-# RUN apk add --no-cache python3 py3-pip
+# Cài đặt Python và các thư viện cần thiết
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    chromium-browser \
+    chromium-chromedriver \
+    && rm -rf /var/lib/apt/lists/*
 
-# Chỉ cài đặt thư viện selenium (không cài playwright)
-USER root
-RUN pip install selenium
-USER node
+# Cài đặt Selenium
+RUN pip3 install --user selenium
 
 ARG N8N_RELEASE_TYPE=dev
 ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
