@@ -26,8 +26,12 @@ ENV NODE_ENV=production
 
 # Thêm đoạn code cài đặt Python và thư viện vào đây
 USER root
-RUN apk add --no-cache python3 py3-pip
-RUN pip install selenium playwright
+# Cài đặt python3, py3-pip và thêm libc6-compat để hỗ trợ glibc (cần cho playwright)
+RUN apk add --no-cache python3 py3-pip libc6-compat
+# Nâng cấp pip, setuptools và wheel
+RUN pip install --upgrade pip setuptools wheel
+# Cài đặt selenium và playwright (không dùng cache)
+RUN pip install --no-cache-dir selenium playwright
 USER node
 
 ARG N8N_RELEASE_TYPE=dev
