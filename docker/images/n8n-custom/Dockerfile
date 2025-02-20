@@ -24,6 +24,12 @@ RUN NODE_ENV=production DOCKER_BUILD=true pnpm --filter=n8n --prod --no-optional
 FROM n8nio/base:${NODE_VERSION}
 ENV NODE_ENV=production
 
+# Thêm đoạn code cài đặt Python và thư viện vào đây
+USER root
+RUN apk add --no-cache python3 py3-pip
+RUN pip install selenium playwright
+USER node
+
 ARG N8N_RELEASE_TYPE=dev
 ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
 
