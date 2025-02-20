@@ -27,7 +27,7 @@ FROM n8nio/base:${NODE_VERSION}
 ENV NODE_ENV=production
 
 # Cài đặt Python và các thư viện cần thiết
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     chromium-browser \
@@ -36,9 +36,6 @@ RUN apt-get update && apt-get install -y \
 
 # Cài đặt Selenium
 RUN pip3 install --user selenium
-
-# Thiết lập biến môi trường cho Selenium
-ENV PATH $PATH:/usr/lib/chromium-browser
 
 ARG N8N_RELEASE_TYPE=dev
 ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
